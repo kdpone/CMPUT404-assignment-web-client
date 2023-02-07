@@ -22,7 +22,7 @@ import sys
 import socket
 import re
 # you may use urllib to encode data appropriately
-import urllib.parse
+from urllib.parse import urlparse
 
 def help():
     print("httpclient.py [GET/POST] [URL]\n")
@@ -41,12 +41,14 @@ class HTTPClient(object):
         return None
 
     def get_code(self, data):
+        
         return None
 
     def get_headers(self,data):
         return None
 
     def get_body(self, data):
+    
         return None
     
     def sendall(self, data):
@@ -68,13 +70,37 @@ class HTTPClient(object):
         return buffer.decode('utf-8')
 
     def GET(self, url, args=None):
-        code = 500
-        body = ""
-        return HTTPResponse(code, body)
+        #parse url
+        #Format: https://docs.python.org/3/library/urllib.parse.html#url-parsing
+        url_parsed_list = urlparse(url) 
+        scheme = url_parsed_list[0]
+        netloc = url_parsed_list[1]
+        path = url_parsed_list[2]
+        
+        #Connecting
+        self.connect('127.0.0.1', 8080)
+        
+        #Get data      
+        req = f"GET /{path} HTTP/1.1\r\n" 
+        req += f"Host: {netloc}\r\n"
+        req += f"Accept: text/html\r\n"
+        req += f"Connection: keep-alive\r\n"
+        req += f"Content-Type: application/x-www-form-urlencoded\r\n"
+        req += f"Content-Length: 500"#how to get content length?
+        self.sendall(req)
+
+        #Receiving data
+        data = self.recvall(self.socket) #need to tokenize this then look for code
+        print(data)
+        #code = self.get_code()
+        #body = self.get_body()
+        
+        #return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
-        code = 500
-        body = ""
+        code = self.get_code
+        body = self.get_body
+
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
