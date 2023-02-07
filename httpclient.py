@@ -76,32 +76,100 @@ class HTTPClient(object):
         scheme = url_parsed_list[0]
         netloc = url_parsed_list[1]
         path = url_parsed_list[2]
+        if path[-1:] != '/':
+            path += '/'
         
         #Connecting
-        self.connect('127.0.0.1', 8080)
+        #host = "127.0.0.1"
+        #host = str(url_parsed_list[1])
+        host = url_parsed_list[1]
+        port = 80
+        #check if : is in host
         
+        if(':' in host):
+            port = host[-4:]
+            l = len(port)+1
+            host = host[:-l]
+            print(f"My port {port}") 
+
+        
+        print(f"My Host: {host} ")
+        print(f"My Path: {path} ")
+        remote_ip = socket.gethostbyname(host)
+        self.connect(host, int(port))#change
+        req = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nAccept: text/html\r\n\r\n"
+        self.socket.send(req.encode())
+        data = self.socket.recv(4096).decode()
+        print(data)
+        data_list = data.split()
+        body_list = data.split('\r\n\r\n')
+        real_body = body_list[1]
+        #print(real_body)
+        self.close()
+
+        
+        code = int(data_list[1])
+        body = data+f"{path}"
+        find_path = body.find(path)
+        #print(f"This is my path {find_path}")
+        #print("this is my code:",code)
+        #print(f"This is my body: {body}")
+        
+        return HTTPResponse(code, body)
+
+        '''
         #Get data      
         req = f"GET /{path} HTTP/1.1\r\n" 
         req += f"Host: {netloc}\r\n"
         req += f"Accept: text/html\r\n"
         req += f"Connection: keep-alive\r\n"
-        req += f"Content-Type: application/x-www-form-urlencoded\r\n"
-        req += f"Content-Length: 500"#how to get content length?
+        req += f"Content-Type: application/x-www-form-urlencoded\r\n\r\n"
         self.sendall(req)
 
         #Receiving data
-        data = self.recvall(self.socket) #need to tokenize this then look for code
+        data = self.recvall(self.socket) 
+        data_list = data.split()
+        print("This is code ",data_list[1])
         print(data)
-        #code = self.get_code()
-        #body = self.get_body()
+        code = data_list[1]
+        body = data
+
+        self.close()
         
-        #return HTTPResponse(code, body)
+        return HTTPResponse(code, body) '''
 
     def POST(self, url, args=None):
-        code = self.get_code
-        body = self.get_body
+        '''
+        url_parsed_list = urlparse(url) 
+        scheme = url_parsed_list[0]
+        netloc = url_parsed_list[1]
+        path = url_parsed_list[2]
+        
+        #Connecting
+        self.connect('\www.google.com', 80)#change
 
-        return HTTPResponse(code, body)
+        to_send = "<h1>KLYDE WAS HERE</h1>"
+        #Get data      
+        req = f"POST /{path} HTTP/1.1\r\n" 
+        req += f"Host: {netloc}\r\n"
+        req += f"Accept: text/html\r\n"
+        req += f"Connection: keep-alive\r\n"
+        req += f"Content-Type: application/x-www-form-urlencoded\r\n"
+        req += f"Content-Length: {len(to_send)}\r\n\r\n"#only for post
+
+        req += to_send
+
+        self.sendall(req)
+
+        #Receiving data
+        data = self.recvall(self.socket) 
+        data_list = data.split()
+        print("This is code ",data_list[1])
+        print(data)
+        code = data_list[1]
+        body = data
+        
+        return HTTPResponse(code, body) '''
 
     def command(self, url, command="GET", args=None):
         if (command == "POST"):
