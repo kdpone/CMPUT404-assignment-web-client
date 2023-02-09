@@ -22,7 +22,7 @@ import sys
 import socket
 import re
 # you may use urllib to encode data appropriately
-from urllib.parse import urlparse,urlencode
+from urllib.parse import urlparse
 
 def help():
     print("httpclient.py [GET/POST] [URL]\n")
@@ -41,15 +41,16 @@ class HTTPClient(object):
         return None
 
     def get_code(self, data):
-        
-        return None
+        data = data.split()
+
+        return int(data[1])
 
     def get_headers(self,data):
         return None
 
     def get_body(self, data):
     
-        return None
+        return data.split("\r\n\r\n")[1]
     
     def sendall(self, data):
         self.socket.sendall(data.encode('utf-8'))
@@ -87,13 +88,12 @@ class HTTPClient(object):
         self.connect(host, int(port))
         req = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nAccept: text/html\r\nConnection: close\r\n\r\n"
         self.sendall(req)
-        data = self.recvall(self.socket)
-        data_list = data.split()
-        real_body = data.split("\r\n\r\n")[1]
-        
 
-        code = int(data_list[1])
-        body = real_body
+        #Receiving
+        data = self.recvall(self.socket)    
+
+        code = self.get_code(data)
+        body = self.get_body(data)
         self.close()
         return HTTPResponse(code, body)
 
@@ -129,19 +129,16 @@ class HTTPClient(object):
         args_length = len(args_body)
                
 
-        #Connecting
+        #Connecting/Sending
         self.connect(host, int(port))
         req = f"POST {path} HTTP/1.1\r\nHost: {host}\r\nAccept: text/html\r\nContent-Length: {args_length}\r\nConnection: close\r\n\r\n{args_body}"
         self.sendall(req)
-        #self.socket.send(req.encode())
-        #data = self.socket.recv(4096).decode()
-        data = self.recvall(self.socket)
-        data_list = data.split()
-        real_body = data.split("\r\n\r\n")[1] 
-        
 
-        code = int(data_list[1])
-        body = real_body
+        #Receiving
+        data = self.recvall(self.socket)    
+
+        code = self.get_code(data)
+        body = self.get_body(data)
         self.close()
         return HTTPResponse(code, body)
 
