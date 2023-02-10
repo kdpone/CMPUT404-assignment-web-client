@@ -79,18 +79,38 @@ class HTTPClient(object):
         port = 80
         if path[-1:] != '/':
             path += '/'
+
+        #Does it start with http?
+        if url_parsed_list.scheme != 'http':
+            return HTTPResponse(400, 'Bad Request') 
+
+        #Handle args
+        i = 0
+        args_body = '?'
+        if args != None:
+            for x in args:        
+                if i != 0:
+                    args_body += f"&{x}={args[x]}"
+                else:
+                    args_body += f"{x}={args[x]}"
+                i+=1 #Goes through if after first iteration
+
+        #Append args as query params
+        path += args_body
         
         if url_parsed_list.port:
             port = url_parsed_list.port
 
 
         #Connecting
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134"
         self.connect(host, int(port))
-        req = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nAccept: text/html\r\nConnection: close\r\n\r\n"
+        req = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: {user_agent}\r\nAccept: text/html\r\nAccept-Language: en\r\nAccept-Endoding: gzip\r\nDNT: 1\r\nConnection: close\r\n\r\n"
         self.sendall(req)
 
         #Receiving
-        data = self.recvall(self.socket)    
+        data = self.recvall(self.socket)  
+        
 
         code = self.get_code(data)
         body = self.get_body(data)
@@ -110,6 +130,10 @@ class HTTPClient(object):
         if path[-1:] != '/':
             path += '/'
         
+        #Does it start with http?
+        if url_parsed_list.scheme != 'http':
+            return HTTPResponse(400, 'Bad Request') 
+
         if url_parsed_list.port:
             port = url_parsed_list.port
 
@@ -130,8 +154,9 @@ class HTTPClient(object):
                
 
         #Connecting/Sending
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134"
         self.connect(host, int(port))
-        req = f"POST {path} HTTP/1.1\r\nHost: {host}\r\nAccept: text/html\r\nContent-Length: {args_length}\r\nConnection: close\r\n\r\n{args_body}"
+        req = f"POST {path} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: {user_agent}\r\nAccept: text/html\r\nAccept-Language: en\r\nAccept-Endoding: gzip\r\nDNT: 1\r\nContent-Length: {args_length}\r\nConnection: close\r\n\r\n{args_body}"
         self.sendall(req)
 
         #Receiving
